@@ -6,43 +6,43 @@ import numpy as np
 file_path = r"C:\Users\17244\OneDrive\Grad School\NUCE 597\Exp5\Data.xlsx"
 data = pd.read_excel(file_path)
 
-# Constants for correction factor (assuming no container effects for simplicity)
-mu = 1.0  # Mass attenuation coefficient
-rho = 1.0  # Density
-t = 1.0  # Thickness
+samples = ['Natural 0.07% Counts', 'Natural slug Counts', 'Depleted U 0.02% Counts', 
+           'Depleted U 0.5% Counts', 'Enriched 15.41% Counts', 'HEU Counts', 'Fuel Pellet 1 Counts', 'Fuel Pellet 2 Counts']
 
 # Known enrichment and target energy
 known_enrichment = 15.41  # %
-target_energy = 185.7  # keV
+target_energy = 185.49307  # keV
 
-# Find the row with the energy closest to 185.7 keV
+# Find the row with the energy closest to target energy
 closest_energy_row = data.iloc[(data['Energy'] - target_energy).abs().argsort()[:1]]
 
 # Extract the counts and uncertainties for the enriched sample at 15.41% from the closest energy row
 counts = closest_energy_row['Enriched 15.41% Counts'].values[0]
-uncertainty_counts = closest_energy_row['Enriched 15.41% Uncertainty'].values[0]
+uncertainty_counts = closest_energy_row['Enriched 15.41% Counts Uncertainty'].values[0]
 
 # Calculate the net count rate and its uncertainty
 net_count_rate = counts / 900  # Counts per 900 seconds
 net_count_rate_uncertainty = uncertainty_counts
 
-# Calculate the correction factor (CF) and its uncertainty
-CF = np.exp(mu * rho * t)
-CF_uncertainty = CF * np.sqrt((t * rho * mu)**2 + (t * mu * rho)**2 + (mu * rho * t)**2)
 
 # Calculate the calibration constant (K) and its uncertainty
-K = known_enrichment / (net_count_rate * CF)
-K_uncertainty = K * np.sqrt((net_count_rate_uncertainty / net_count_rate)**2 + (CF_uncertainty / CF)**2)
+a = 1/((known_enrichment/net_count_rate)*((0.01/known_enrichment)**2))
+b = 1/(((known_enrichment/net_count_rate)**2)*((0.01/known_enrichment)**2))
+K = a/b
+K_uncertainty = np.sqrt(1/(1/(((known_enrichment/net_count_rate)**2)*((0.01/known_enrichment)**2))))
+
 
 # Function to apply the calibration constant to estimate enrichment
-def calculate_enrichment(count_rate, K, CF, K_uncertainty, CF_uncertainty):
-    enrichment = K * count_rate * CF
-    uncertainty_enrichment = enrichment * np.sqrt((K_uncertainty / K)**2 + (net_count_rate_uncertainty / count_rate)**2 + (CF_uncertainty / CF)**2)
+def calculate_enrichment(count_rate, K,CR_uncertainty):
+    enrichment = K * count_rate
+    uncertainty_enrichment = enrichment * (CR_uncertainty/count_rate)
     return enrichment, uncertainty_enrichment
 
-# Apply the calibration constant to all samples
-data['Calculated Enrichment'] = data['Enriched 15.41% Counts'].apply(lambda x: calculate_enrichment(x / 900, K, CF, K_uncertainty, CF_uncertainty)[0])
-data['Calculated Enrichment Uncertainty'] = data['Enriched 15.41% Counts'].apply(lambda x: calculate_enrichment(x / 900, K, CF, K_uncertainty, CF_uncertainty)[1])
+for sample in samples:
+    count_rate =  (closest_energy_row[sample].values[0])/900
+    count_rate_uncertainty = closest_energy_row[f'{sample} Uncertainty'].values[0]
+    enrichment, uncertainty_enrichment= calculate_enrichment(count_rate, K, count_rate_uncertainty)
+    print(sample, enrichment, uncertainty_enrichment)
 
 # Generate the plot for energy vs count rate
 def plot_energy_vs_count_rate(data):
