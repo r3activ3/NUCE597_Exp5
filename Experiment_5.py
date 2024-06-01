@@ -26,8 +26,8 @@ net_count_rate_uncertainty = uncertainty_counts
 
 
 # Calculate the calibration constant (K) and its uncertainty
-a = 1/((known_enrichment/net_count_rate)*((0.01/known_enrichment)**2))
-b = 1/(((known_enrichment/net_count_rate)**2)*((0.01/known_enrichment)**2))
+a = 1/((known_enrichment/net_count_rate)*((net_count_rate_uncertainty/net_count_rate)**2))
+b = 1/(((known_enrichment/net_count_rate)**2) * ((net_count_rate_uncertainty/net_count_rate)**2))
 K = a/b
 K_uncertainty = np.sqrt(1/(1/(((known_enrichment/net_count_rate)**2)*((0.01/known_enrichment)**2))))
 
@@ -52,13 +52,20 @@ def plot_energy_vs_count_rate(data):
     
     fig = go.Figure()
     for col in columns:
-        fig.add_trace(go.Scatter(x=energy, y=data[col], mode='lines+markers', name=col))
+        fig.add_trace(go.Scatter(x=energy, y=data[col], mode='lines', name=col))
     
     fig.update_layout(
         title="Energy vs Counts for All Samples",
         xaxis_title="Energy (keV)",
-        yaxis_title="Count Rate",
-        hovermode="x unified"
+        yaxis_title="Counts",
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.3,
+            xanchor="center",
+            x=0.5
+        )
     )
     
     return fig
@@ -71,13 +78,20 @@ def create_combined_plot_in_range(data, energy_range, title):
     
     fig = go.Figure()
     for col in columns:
-        fig.add_trace(go.Scatter(x=energy[energy_range], y=data[col][energy_range], mode='lines+markers', name=col))
+        fig.add_trace(go.Scatter(x=energy[energy_range], y=data[col][energy_range], mode='lines', name=col))
     
     fig.update_layout(
         title=title,
         xaxis_title="Energy (keV)",
         yaxis_title="Counts",
-        hovermode="x unified"
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.3,
+            xanchor="center",
+            x=0.5
+        )
     )
     
     return fig
@@ -91,6 +105,7 @@ combined_plot_88_102 = create_combined_plot_in_range(data, energy_range_88_102, 
 
 # Display the plots
 energy_vs_count_rate_plot = plot_energy_vs_count_rate(data)
-energy_vs_count_rate_plot.show()
+
 combined_plot_184_187.show()
 combined_plot_88_102.show()
+energy_vs_count_rate_plot.show()
