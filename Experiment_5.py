@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import numpy as np
 
 # Load the Excel file
-file_path = r"C:\Users\17244\OneDrive\Grad School\NUCE 597\Exp5\Data.xlsx"
+file_path = r"C:\Users\jerem\OneDrive\Grad School\NUCE 597\Exp5\Data.xlsx"
 data = pd.read_excel(file_path)
 
 samples = ['Natural 0.07% Counts', 'Natural slug Counts', 'Depleted U 0.02% Counts', 
@@ -21,7 +21,7 @@ counts = closest_energy_row['Enriched 15.41% Counts'].values[0]
 uncertainty_counts = closest_energy_row['Enriched 15.41% Counts Uncertainty'].values[0]
 
 # Calculate the net count rate and its uncertainty
-net_count_rate = counts / 900  # Counts per 900 seconds
+net_count_rate = counts / 1800  # Counts per 1800 seconds
 net_count_rate_uncertainty = uncertainty_counts
 
 
@@ -39,7 +39,7 @@ def calculate_enrichment(count_rate, K,CR_uncertainty):
     return enrichment, uncertainty_enrichment
 
 for sample in samples:
-    count_rate =  (closest_energy_row[sample].values[0])/900
+    count_rate =  (closest_energy_row[sample].values[0])/1800
     count_rate_uncertainty = closest_energy_row[f'{sample} Uncertainty'].values[0]
     enrichment, uncertainty_enrichment= calculate_enrichment(count_rate, K, count_rate_uncertainty)
     print(sample, enrichment, uncertainty_enrichment)
