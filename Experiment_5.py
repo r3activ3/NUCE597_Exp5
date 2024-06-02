@@ -24,25 +24,35 @@ uncertainty_counts = closest_energy_row['Enriched 15.41% Counts Uncertainty'].va
 net_count_rate = counts / 1800  # Counts per 1800 seconds
 net_count_rate_uncertainty = uncertainty_counts
 
-
 # Calculate the calibration constant (K) and its uncertainty
 a = 1/((known_enrichment/net_count_rate)*((net_count_rate_uncertainty/net_count_rate)**2))
 b = 1/(((known_enrichment/net_count_rate)**2) * ((net_count_rate_uncertainty/net_count_rate)**2))
 K = a/b
 K_uncertainty = np.sqrt(1/(1/(((known_enrichment/net_count_rate)**2)*((0.01/known_enrichment)**2))))
 
-
 # Function to apply the calibration constant to estimate enrichment
-def calculate_enrichment(count_rate, K,CR_uncertainty):
+def calculate_enrichment(count_rate, K, CR_uncertainty):
     enrichment = K * count_rate
     uncertainty_enrichment = enrichment * (CR_uncertainty/count_rate)
     return enrichment, uncertainty_enrichment
 
+# Create a list to store the results
+results = []
+
 for sample in samples:
-    count_rate =  (closest_energy_row[sample].values[0])/1800
+    count_rate = (closest_energy_row[sample].values[0]) / 1800
     count_rate_uncertainty = closest_energy_row[f'{sample} Uncertainty'].values[0]
-    enrichment, uncertainty_enrichment= calculate_enrichment(count_rate, K, count_rate_uncertainty)
-    print(sample, enrichment, uncertainty_enrichment)
+    enrichment, uncertainty_enrichment = calculate_enrichment(count_rate, K, count_rate_uncertainty)
+    results.append([sample, enrichment, uncertainty_enrichment])
+
+# Convert the results list to a pandas DataFrame
+results_df = pd.DataFrame(results, columns=['Sample', 'Enrichment', 'Uncertainty Enrichment'])
+
+# Display the DataFrame
+print(results_df)
+
+# Optionally, save the DataFrame to an Excel file
+results_df.to_excel("Experiment_5_Results.xlsx", index=False)
 
 # Generate the plot for energy vs count rate
 def plot_energy_vs_count_rate(data):
